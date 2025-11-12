@@ -28,9 +28,12 @@ export default function ProductsPage({ onToast }) {
   const debouncedSearch = useDebounce(search, 500)
   const debouncedCategory = useDebounce(category, 500)
 
-  const isMounted = useRef(false)
+  const didMountRef = useRef(false)
+  const isFetchingRef = useRef(false)
 
   const fetchProducts = useCallback(async (s = "", c = "") => {
+    if (isFetchingRef.current) return
+    isFetchingRef.current = true
     dispatch(setLoading())
     try {
       const res = s || c
@@ -40,26 +43,28 @@ export default function ProductsPage({ onToast }) {
     } catch (e) {
       dispatch(setError(e.message))
       onToast?.(e.message || t("common.error"), "error")
+    } finally {
+      isFetchingRef.current = false
     }
   }, [dispatch, onToast, t])
 
-  // initial load
   useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true
+    if (!didMountRef.current) {
+      didMountRef.current = true
       fetchProducts(urlSearch, urlCategory)
     }
-  }, [])
+  }, []) 
 
-  // update URL params & fetch again
   useEffect(() => {
+    if (!didMountRef.current) return
+
     const params = new URLSearchParams()
     if (debouncedSearch) params.set("search", debouncedSearch)
     if (debouncedCategory) params.set("category", debouncedCategory)
     setSearchParams(params)
 
     fetchProducts(debouncedSearch, debouncedCategory)
-  }, [debouncedSearch, debouncedCategory, setSearchParams, fetchProducts])
+  }, [debouncedSearch, debouncedCategory])
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>

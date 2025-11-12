@@ -1,11 +1,11 @@
 import axiosClient from "./axiosClient"
 
 export const authService = {
-  register: async (email, password, name, phone) => {
+  register: async (email, password, username, phone) => {
     const response = await axiosClient.post("/auth/register", {
       email,
       password,
-      name,
+      username,
       phone,
     })
     return response.data
