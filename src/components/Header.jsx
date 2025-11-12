@@ -56,7 +56,6 @@ export default function Header() {
     <AppBar position="sticky" color="inherit" elevation={1}>
       <Toolbar sx={{ justifyContent: "space-between", minHeight: 64 }}>
 
-        {/* Logo */}
         <Typography
           component={Link}
           to="/products"
@@ -71,7 +70,6 @@ export default function Header() {
           ShopHub
         </Typography>
 
-        {/* Desktop Navigation */}
         <Box sx={{ display: { xs: "none", lg: "flex" }, gap: 3, alignItems: "center" }}>
           {navLinks.map(({ to, icon: Icon, label }) => (
             <IconButton
@@ -97,14 +95,12 @@ export default function Header() {
             </IconButton>
           ))}
 
-          {/* Cart */}
           <IconButton component={Link} to="/cart" size="large">
             <Badge badgeContent={cartCount} color="error">
               <ShoppingCartIcon />
             </Badge>
           </IconButton>
 
-          {/* Profile */}
           <IconButton onClick={(e) => setProfileAnchor(e.currentTarget)} size="large">
             {user ? (
               <Avatar sx={{ width: 36, height: 36, fontSize: "0.95rem", bgcolor: "primary.main" }}>
@@ -116,7 +112,6 @@ export default function Header() {
           </IconButton>
         </Box>
 
-        {/* Mobile: Hamburger */}
         <IconButton
           sx={{ display: { lg: "none" } }}
           onClick={(e) => setMobileAnchor(e.currentTarget)}
@@ -125,7 +120,6 @@ export default function Header() {
         </IconButton>
       </Toolbar>
 
-      {/* Mobile Menu */}
       <Menu
         anchorEl={mobileAnchor}
         open={Boolean(mobileAnchor)}
@@ -178,7 +172,6 @@ export default function Header() {
         )}
       </Menu>
 
-      {/* Desktop Profile Menu */}
       <Menu
         anchorEl={profileAnchor}
         open={Boolean(profileAnchor)}
@@ -214,7 +207,6 @@ export default function Header() {
         )}
       </Menu>
 
-      {/* Language Submenu (Shared) */}
       <Menu
         anchorEl={langAnchor}
         open={Boolean(langAnchor)}
