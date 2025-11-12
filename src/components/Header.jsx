@@ -1,150 +1,235 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { useDispatch, useSelector } from "react-redux"
-import { logout } from "../store/slices/authSlice"
-import { useTranslation } from "react-i18next"
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../store/slices/authSlice";
+import { useTranslation } from "react-i18next";
 import {
-  AppBar, Toolbar, Typography, IconButton, Badge, Menu, MenuItem, Button, Box, Avatar
-} from "@mui/material"
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart"
-import MenuIcon from "@mui/icons-material/Menu"
-import PersonIcon from "@mui/icons-material/Person"
-import StorefrontIcon from "@mui/icons-material/Storefront"
-import ListAltIcon from "@mui/icons-material/ListAlt"
+  AppBar, Toolbar, IconButton, Badge, Menu, MenuItem, Box, Avatar, Typography,
+  ListItemIcon, ListItemText, Divider
+} from "@mui/material";
+import {
+  ShoppingCart as ShoppingCartIcon,
+  Menu as MenuIcon,
+  Person as PersonIcon,
+  Storefront as StorefrontIcon,
+  ListAlt as ListAltIcon,
+  Logout as LogoutIcon,
+  Language as LanguageIcon
+} from "@mui/icons-material";
 
 export default function Header() {
-  const { t } = useTranslation()
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const user = useSelector(s => s.auth.user)
-  const cartItems = useSelector(s => s.cart.items)
-  const cartCount = cartItems.reduce((s, i) => s + (i.quantity || 1), 0)
+  const { t, i18n } = useTranslation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector(s => s.auth.user);
+  const cartItems = useSelector(s => s.cart.items);
+  const cartCount = cartItems.reduce((sum, i) => sum + (i.quantity || 1), 0);
 
-  const [profileAnchorEl, setProfileAnchorEl] = useState(null)
-  const [mobileAnchorEl, setMobileAnchorEl] = useState(null)
+  const [mobileAnchor, setMobileAnchor] = useState(null);
+  const [profileAnchor, setProfileAnchor] = useState(null);
+  const [langAnchor, setLangAnchor] = useState(null);
+
+  const closeAll = () => {
+    setMobileAnchor(null);
+    setProfileAnchor(null);
+    setLangAnchor(null);
+  };
 
   const handleLogout = () => {
-    dispatch(logout())
-    navigate("/login")
-    handleProfileMenuClose()
-    handleMobileMenuClose()
-  }
+    dispatch(logout());
+    navigate("/login");
+    closeAll();
+  };
 
-  const handleProfileMenuOpen = (event) => setProfileAnchorEl(event.currentTarget)
-  const handleProfileMenuClose = () => setProfileAnchorEl(null)
+  const changeLang = (lng) => {
+    i18n.changeLanguage(lng);
+    closeAll();
+  };
 
-  const handleMobileMenuOpen = (event) => setMobileAnchorEl(event.currentTarget)
-  const handleMobileMenuClose = () => setMobileAnchorEl(null)
-
-  const profileMenuId = "profile-menu"
-  const mobileMenuId = "mobile-menu"
+  // Shared navigation items
+  const navLinks = [
+    { to: "/products", icon: StorefrontIcon, label: t("nav.products") },
+    { to: "/orders", icon: ListAltIcon, label: t("nav.orders") },
+  ];
 
   return (
     <AppBar position="sticky" color="inherit" elevation={1}>
-      <Toolbar sx={{ justifyContent: "space-between" }}>
+      <Toolbar sx={{ justifyContent: "space-between", minHeight: 64 }}>
+
+        {/* Logo */}
         <Typography
-          variant="h6"
           component={Link}
           to="/products"
-          sx={{ color: "success.main", fontWeight: "bold", textDecoration: "none" }}
+          sx={{
+            fontWeight: 700,
+            fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            color: "success.main",
+            textDecoration: "none",
+            letterSpacing: 0.5
+          }}
         >
           ShopHub
         </Typography>
 
-        <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3 }}>
-          <Button
-            component={Link}
-            to="/products"
-            startIcon={<StorefrontIcon />}
-          >
-            {t("nav.products")}
-          </Button>
-          <Button
-            component={Link}
-            to="/orders"
-            startIcon={<ListAltIcon />}
-          >
-            {t("nav.orders")}
-          </Button>
-        </Box>
+        {/* Desktop Navigation */}
+        <Box sx={{ display: { xs: "none", lg: "flex" }, gap: 3, alignItems: "center" }}>
+          {navLinks.map(({ to, icon: Icon, label }) => (
+            <IconButton
+              key={to}
+              component={Link}
+              to={to}
+              size="large"
+              sx={{
+                color: "text.primary",
+                "&:hover": { color: "primary.main" },
+                borderRadius: 2,
+                px: 1.5,
+                py: 0.75,
+                display: "flex",
+                alignItems: "center",
+                gap: 1
+              }}
+            >
+              <Icon fontSize="small" />
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                {label}
+              </Typography>
+            </IconButton>
+          ))}
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <IconButton component={Link} to="/cart" color="inherit">
+          {/* Cart */}
+          <IconButton component={Link} to="/cart" size="large">
             <Badge badgeContent={cartCount} color="error">
               <ShoppingCartIcon />
             </Badge>
           </IconButton>
 
-          <IconButton
-            edge="end"
-            color="inherit"
-            aria-controls={profileMenuId}
-            aria-haspopup="true"
-            onClick={handleProfileMenuOpen}
-          >
-            {user ? <Avatar sx={{ width: 32, height: 32 }}>{user.username[0].toUpperCase()}</Avatar> : <PersonIcon />}
-          </IconButton>
-
-          <IconButton
-            edge="end"
-            color="inherit"
-            sx={{ display: { md: "none" } }}
-            aria-controls={mobileMenuId}
-            aria-haspopup="true"
-            onClick={handleMobileMenuOpen}
-          >
-            <MenuIcon />
+          {/* Profile */}
+          <IconButton onClick={(e) => setProfileAnchor(e.currentTarget)} size="large">
+            {user ? (
+              <Avatar sx={{ width: 36, height: 36, fontSize: "0.95rem", bgcolor: "primary.main" }}>
+                {user.username[0].toUpperCase()}
+              </Avatar>
+            ) : (
+              <PersonIcon />
+            )}
           </IconButton>
         </Box>
+
+        {/* Mobile: Hamburger */}
+        <IconButton
+          sx={{ display: { lg: "none" } }}
+          onClick={(e) => setMobileAnchor(e.currentTarget)}
+        >
+          <MenuIcon />
+        </IconButton>
       </Toolbar>
 
+      {/* Mobile Menu */}
       <Menu
-        id={profileMenuId}
-        anchorEl={profileAnchorEl}
-        open={Boolean(profileAnchorEl)}
-        onClose={handleProfileMenuClose}
+        anchorEl={mobileAnchor}
+        open={Boolean(mobileAnchor)}
+        onClose={closeAll}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
+        PaperProps={{ sx: { mt: 1, minWidth: 220 } }}
       >
-        {user
-          ? [
-            <MenuItem key="user" disabled>{user.username} ({user.email})</MenuItem>,
-            <MenuItem key="logout" onClick={handleLogout} sx={{ color: "error.main" }}>{t("nav.logout")}</MenuItem>
-          ]
-          : [
-            <MenuItem key="login" component={Link} to="/login" onClick={handleProfileMenuClose}>
-              {t("nav.login")}
+        {navLinks.map(({ to, icon: Icon, label }) => (
+          <MenuItem key={to} component={Link} to={to} onClick={closeAll}>
+            <ListItemIcon><Icon fontSize="small" /></ListItemIcon>
+            <ListItemText>{label}</ListItemText>
+          </MenuItem>
+        ))}
+
+        <MenuItem component={Link} to="/cart" onClick={closeAll}>
+          <ListItemIcon>
+            <Badge badgeContent={cartCount} color="error" fontSize="small">
+              <ShoppingCartIcon fontSize="small" />
+            </Badge>
+          </ListItemIcon>
+          <ListItemText>{t("nav.cart")}</ListItemText>
+        </MenuItem>
+
+        <Divider sx={{ my: 1 }} />
+
+        {user ? (
+          <>
+            <MenuItem disabled>
+              <ListItemText
+                primary={user.username}
+                secondary={user.email}
+                primaryTypographyProps={{ fontWeight: 600, fontSize: "0.95rem" }}
+                secondaryTypographyProps={{ fontSize: "0.8rem" }}
+              />
             </MenuItem>
-          ]
-        }
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
+              <ListItemText>{t("nav.logout")}</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={(e) => { setLangAnchor(e.currentTarget); e.stopPropagation(); }}>
+              <ListItemIcon><LanguageIcon fontSize="small" /></ListItemIcon>
+              <ListItemText>{t("nav.language")}</ListItemText>
+            </MenuItem>
+          </>
+        ) : (
+          <MenuItem component={Link} to="/login" onClick={closeAll}>
+            <ListItemText>{t("nav.login")}</ListItemText>
+          </MenuItem>
+        )}
       </Menu>
 
-
+      {/* Desktop Profile Menu */}
       <Menu
-        id={mobileMenuId}
-        anchorEl={mobileAnchorEl}
-        open={Boolean(mobileAnchorEl)}
-        onClose={handleMobileMenuClose}
+        anchorEl={profileAnchor}
+        open={Boolean(profileAnchor)}
+        onClose={closeAll}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
-        PaperProps={{ sx: { m: 0, minWidth: 180 } }}
-        disablePortal
+        PaperProps={{ sx: { mt: 1.5, minWidth: 200 } }}
       >
-        <MenuItem component={Link} to="/products" onClick={handleMobileMenuClose}>
-          <StorefrontIcon sx={{ mr: 1 }} />
-          {t("nav.products")}
-        </MenuItem>
-        <MenuItem component={Link} to="/orders" onClick={handleMobileMenuClose}>
-          <ListAltIcon sx={{ mr: 1 }} />
-          {t("nav.orders")}
-        </MenuItem>
-
-        {!user && (
-          <MenuItem component={Link} to="/login" onClick={handleMobileMenuClose}>
+        {user ? (
+          <>
+            <MenuItem disabled>
+              <ListItemText
+                primary={user.username}
+                secondary={user.email}
+                primaryTypographyProps={{ fontWeight: 600 }}
+                secondaryTypographyProps={{ fontSize: "0.8rem", color: "text.secondary" }}
+              />
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
+              <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
+              <ListItemText>{t("nav.logout")}</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={(e) => { setLangAnchor(e.currentTarget); e.stopPropagation(); }}>
+              <ListItemIcon><LanguageIcon fontSize="small" /></ListItemIcon>
+              <ListItemText>{t("nav.language")}</ListItemText>
+            </MenuItem>
+          </>
+        ) : (
+          <MenuItem component={Link} to="/login" onClick={closeAll}>
             {t("nav.login")}
           </MenuItem>
         )}
       </Menu>
+
+      {/* Language Submenu (Shared) */}
+      <Menu
+        anchorEl={langAnchor}
+        open={Boolean(langAnchor)}
+        onClose={closeAll}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        PaperProps={{ sx: { mt: -1 } }}
+      >
+        <MenuItem onClick={() => changeLang("uz")}>
+          <ListItemText inset={!langAnchor}>O'zbekcha</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => changeLang("en")}>
+          <ListItemText inset={!langAnchor}>English</ListItemText>
+        </MenuItem>
+      </Menu>
     </AppBar>
-  )
+  );
 }
